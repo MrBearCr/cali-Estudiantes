@@ -1,17 +1,14 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  useGetCurrentUser,
-  getGetCurrentUserQueryKey,
-} from "@workspace/api-client-react";
-import { ApiError } from "@workspace/api-client-react";
+import { createContext, useContext, useEffect, useState, useMemo, type ReactNode } from "react";
+import { onAuthStateChanged, signOut as firebaseSignOut, User } from "firebase/auth";
+import { auth, db } from "./firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export interface SessionUser {
-  id: number;
+  id: string; // Firebase uid
   username: string;
   fullName: string;
   role: "teacher" | "student";
-  studentId?: number | null;
+  studentId?: string | null;
 }
 
 interface AuthContextValue {
@@ -24,41 +21,63 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const queryClient = useQueryClient();
-  const query = useGetCurrentUser({
-    query: {
-      queryKey: getGetCurrentUserQueryKey(),
-      retry: (count, err) => {
-        if (err instanceof ApiError && err.status === 401) return false;
-        return count < 1;
-      },
-      staleTime: 5 * 60 * 1000,
-    },
-  });
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const value = useMemo<AuthContextValue>(() => {
-    let sessionUser: SessionUser | null = null;
-    if (query.data) {
-      sessionUser = {
-        id: query.data.id,
-        username: query.data.username,
-        fullName: query.data.fullName,
-        role: query.data.role as "teacher" | "student",
-        studentId: query.data.studentId ?? null,
-      };
+  const fetchUserData = async (firebaseUser: User | null) => {
+    if (!firebaseUser) {
+      setUser(null);
+      setLoading(false);
+      return;
     }
-    return {
-      user: sessionUser,
-      loading: query.isLoading,
-      refresh: async () => {
-        await queryClient.invalidateQueries({ queryKey: getGetCurrentUserQueryKey() });
-      },
-      signOut: async () => {
-        queryClient.setQueryData(getGetCurrentUserQueryKey(), undefined);
-        queryClient.removeQueries();
-      },
-    };
-  }, [query.data, query.isLoading, queryClient]);
+    
+    try {
+      const docRef = doc(db, "users", firebaseUser.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUser({
+          id: firebaseUser.uid,
+          username: data.username || firebaseUser.email || "",
+          fullName: data.fullName || firebaseUser.displayName || "",
+          role: data.role || "student",
+          studentId: data.studentId || null,
+        });
+      } else {
+        // Fallback for newly created users without a doc yet
+        setUser({
+          id: firebaseUser.uid,
+          username: firebaseUser.email || "",
+          fullName: firebaseUser.displayName || "",
+          role: "student", // default role
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching user data:", e);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      fetchUserData(firebaseUser);
+    });
+    return unsubscribe;
+  }, []);
+
+  const value = useMemo<AuthContextValue>(() => ({
+    user,
+    loading,
+    refresh: async () => {
+      setLoading(true);
+      await fetchUserData(auth.currentUser);
+    },
+    signOut: async () => {
+      await firebaseSignOut(auth);
+    },
+  }), [user, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

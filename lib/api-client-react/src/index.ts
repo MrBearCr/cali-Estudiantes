@@ -1,4 +1,13 @@
-export * from "./generated/api";
+export * from "./firebase-api";
 export * from "./generated/api.schemas";
-export { setBaseUrl, setAuthTokenGetter, ApiError, ResponseParseError } from "./custom-fetch";
-export type { AuthTokenGetter, ErrorType } from "./custom-fetch";
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+export const getGetCurrentUserQueryKey = () => ["currentUser"];
+export function useGetCurrentUser() {
+  return { data: null, isLoading: false };
+}
