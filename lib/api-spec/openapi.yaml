@@ -1,0 +1,749 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API del sistema de notas escolares
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Autenticación (login / logout / sesión actual)
+  - name: students
+    description: Gestión de estudiantes (administrado por el profesor)
+  - name: evaluations
+    description: Evaluaciones (parciales, recuperativos, rezagados, etc.)
+  - name: grades
+    description: Calificaciones por estudiante y evaluación
+  - name: dashboard
+    description: Resúmenes y vistas agregadas
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Iniciar sesión con usuario y contraseña
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Sesión creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Cerrar sesión
+      responses:
+        "204":
+          description: Sesión cerrada
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Obtener el usuario autenticado
+      responses:
+        "200":
+          description: Usuario actual
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: Listar estudiantes (sólo profesor)
+      responses:
+        "200":
+          description: Lista de estudiantes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Student"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Registrar un estudiante (sólo profesor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStudentBody"
+      responses:
+        "201":
+          description: Estudiante creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students/{studentId}:
+    parameters:
+      - in: path
+        name: studentId
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Obtener un estudiante
+      responses:
+        "200":
+          description: Estudiante
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+    patch:
+      operationId: updateStudent
+      tags: [students]
+      summary: Actualizar un estudiante (sólo profesor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStudentBody"
+      responses:
+        "200":
+          description: Estudiante actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+    delete:
+      operationId: deleteStudent
+      tags: [students]
+      summary: Eliminar un estudiante (sólo profesor)
+      responses:
+        "204":
+          description: Estudiante eliminado
+
+  /evaluations:
+    get:
+      operationId: listEvaluations
+      tags: [evaluations]
+      summary: Listar evaluaciones
+      responses:
+        "200":
+          description: Lista de evaluaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Evaluation"
+    post:
+      operationId: createEvaluation
+      tags: [evaluations]
+      summary: Crear una evaluación (sólo profesor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvaluationBody"
+      responses:
+        "201":
+          description: Evaluación creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evaluation"
+
+  /evaluations/{evaluationId}:
+    parameters:
+      - in: path
+        name: evaluationId
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getEvaluation
+      tags: [evaluations]
+      summary: Obtener una evaluación con sus calificaciones
+      responses:
+        "200":
+          description: Evaluación con calificaciones por estudiante
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationWithGrades"
+    patch:
+      operationId: updateEvaluation
+      tags: [evaluations]
+      summary: Actualizar una evaluación (sólo profesor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEvaluationBody"
+      responses:
+        "200":
+          description: Evaluación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evaluation"
+    delete:
+      operationId: deleteEvaluation
+      tags: [evaluations]
+      summary: Eliminar una evaluación (sólo profesor)
+      responses:
+        "204":
+          description: Evaluación eliminada
+
+  /evaluations/{evaluationId}/grades:
+    parameters:
+      - in: path
+        name: evaluationId
+        required: true
+        schema:
+          type: integer
+    put:
+      operationId: upsertGrade
+      tags: [grades]
+      summary: Asignar o actualizar la calificación de un estudiante (sólo profesor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpsertGradeBody"
+      responses:
+        "200":
+          description: Calificación guardada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Grade"
+
+  /students/{studentId}/grades:
+    parameters:
+      - in: path
+        name: studentId
+        required: true
+        schema:
+          type: integer
+    get:
+      operationId: getStudentGrades
+      tags: [grades]
+      summary: Obtener todas las calificaciones de un estudiante con su evaluación
+      responses:
+        "200":
+          description: Lista de calificaciones del estudiante
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GradeWithEvaluation"
+
+  /me/grades:
+    get:
+      operationId: getMyGrades
+      tags: [grades]
+      summary: Calificaciones del estudiante autenticado
+      responses:
+        "200":
+          description: Lista de calificaciones del estudiante actual
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GradeWithEvaluation"
+
+  /me/notifications:
+    get:
+      operationId: getMyNotifications
+      tags: [evaluations]
+      summary: Notificaciones para el estudiante autenticado (próximos exámenes)
+      responses:
+        "200":
+          description: Lista de notificaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /me/dashboard:
+    get:
+      operationId: getMyDashboard
+      tags: [dashboard]
+      summary: Resumen del estudiante autenticado
+      responses:
+        "200":
+          description: Resumen del estudiante
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentDashboard"
+
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [dashboard]
+      summary: Resumen para el profesor
+      responses:
+        "200":
+          description: Resumen general
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
+  /admin/upcoming:
+    get:
+      operationId: getUpcomingEvaluations
+      tags: [evaluations]
+      summary: Próximas evaluaciones (sólo profesor)
+      responses:
+        "200":
+          description: Próximas evaluaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Evaluation"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    UserRole:
+      type: string
+      enum: [teacher, student]
+
+    EvaluationType:
+      type: string
+      description: Tipo de evaluación
+      enum: [parcial, recuperativo, rezagado, examen_final, quiz, tarea]
+
+    LoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required: [username, password]
+
+    AuthSession:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        studentId:
+          type: integer
+          nullable: true
+      required: [id, username, fullName, role]
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+          description: Curso o grado del estudiante (ej. "5to A")
+        createdAt:
+          type: string
+          format: date-time
+        averageScore:
+          type: number
+          nullable: true
+          description: Promedio general del estudiante
+        evaluationsTaken:
+          type: integer
+          description: Cantidad de evaluaciones con nota registrada
+      required: [id, userId, username, fullName, createdAt, evaluationsTaken]
+
+    CreateStudentBody:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+        password:
+          type: string
+          minLength: 4
+        fullName:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+      required: [username, password, fullName]
+
+    UpdateStudentBody:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+        password:
+          type: string
+          minLength: 4
+          description: Si se envía, reemplaza la contraseña
+
+    Evaluation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: "#/components/schemas/EvaluationType"
+        examDate:
+          type: string
+          format: date-time
+        maxScore:
+          type: number
+          description: Calificación máxima posible (ej. 100)
+        weight:
+          type: number
+          description: Ponderación en porcentaje
+        createdAt:
+          type: string
+          format: date-time
+        gradedCount:
+          type: integer
+          description: Cantidad de estudiantes ya calificados
+        totalStudents:
+          type: integer
+          description: Cantidad total de estudiantes
+        averageScore:
+          type: number
+          nullable: true
+          description: Promedio de las calificaciones registradas
+      required:
+        - id
+        - title
+        - type
+        - examDate
+        - maxScore
+        - weight
+        - createdAt
+        - gradedCount
+        - totalStudents
+
+    CreateEvaluationBody:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: "#/components/schemas/EvaluationType"
+        examDate:
+          type: string
+          format: date-time
+        maxScore:
+          type: number
+          minimum: 1
+          default: 100
+        weight:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 10
+      required: [title, type, examDate]
+
+    UpdateEvaluationBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        type:
+          $ref: "#/components/schemas/EvaluationType"
+        examDate:
+          type: string
+          format: date-time
+        maxScore:
+          type: number
+        weight:
+          type: number
+
+    Grade:
+      type: object
+      properties:
+        id:
+          type: integer
+        evaluationId:
+          type: integer
+        studentId:
+          type: integer
+        score:
+          type: number
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+        gradedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [id, evaluationId, studentId]
+
+    UpsertGradeBody:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        score:
+          type: number
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+      required: [studentId]
+
+    EvaluationWithGrades:
+      type: object
+      properties:
+        evaluation:
+          $ref: "#/components/schemas/Evaluation"
+        grades:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentGrade"
+      required: [evaluation, grades]
+
+    StudentGrade:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        studentName:
+          type: string
+        score:
+          type: number
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+        gradedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required: [studentId, studentName]
+
+    GradeWithEvaluation:
+      type: object
+      properties:
+        evaluation:
+          $ref: "#/components/schemas/Evaluation"
+        grade:
+          $ref: "#/components/schemas/Grade"
+          nullable: true
+      required: [evaluation]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        evaluationId:
+          type: integer
+        title:
+          type: string
+        body:
+          type: string
+        type:
+          $ref: "#/components/schemas/EvaluationType"
+        examDate:
+          type: string
+          format: date-time
+        daysUntil:
+          type: integer
+          description: Días restantes (negativo si ya pasó)
+        severity:
+          type: string
+          enum: [info, warning, urgent, past]
+      required: [id, evaluationId, title, body, type, examDate, daysUntil, severity]
+
+    StudentDashboard:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        fullName:
+          type: string
+        averageScore:
+          type: number
+          nullable: true
+        evaluationsTaken:
+          type: integer
+        evaluationsPending:
+          type: integer
+        upcomingCount:
+          type: integer
+        bestScore:
+          type: number
+          nullable: true
+        worstScore:
+          type: number
+          nullable: true
+        recentGrades:
+          type: array
+          items:
+            $ref: "#/components/schemas/GradeWithEvaluation"
+        notifications:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+      required:
+        - studentId
+        - fullName
+        - evaluationsTaken
+        - evaluationsPending
+        - upcomingCount
+        - recentGrades
+        - notifications
+
+    AdminDashboard:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+        totalEvaluations:
+          type: integer
+        upcomingEvaluations:
+          type: integer
+        pendingGradings:
+          type: integer
+          description: Calificaciones aún no asignadas para evaluaciones que ya pasaron
+        classAverage:
+          type: number
+          nullable: true
+        evaluationTypeBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                $ref: "#/components/schemas/EvaluationType"
+              count:
+                type: integer
+            required: [type, count]
+        topStudents:
+          type: array
+          items:
+            type: object
+            properties:
+              studentId:
+                type: integer
+              fullName:
+                type: string
+              averageScore:
+                type: number
+            required: [studentId, fullName, averageScore]
+        upcoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evaluation"
+      required:
+        - totalStudents
+        - totalEvaluations
+        - upcomingEvaluations
+        - pendingGradings
+        - evaluationTypeBreakdown
+        - topStudents
+        - upcoming
