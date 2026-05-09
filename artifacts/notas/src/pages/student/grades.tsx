@@ -1,6 +1,7 @@
 import {
   useGetMyGrades,
   getGetMyGradesQueryKey,
+  GradeWithEvaluation,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { PageContainer, PageHeader } from "@/components/PageHeader";
@@ -48,7 +49,7 @@ export default function StudentGrades() {
         <Card>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
-              {data.map((row) => {
+              {data.map((row: GradeWithEvaluation) => {
                 const score = row.grade?.score ?? null;
                 const max = row.evaluation.maxScore;
                 const pct = score == null ? null : (score / max) * 100;
