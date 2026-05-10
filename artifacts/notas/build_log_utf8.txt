@@ -1,0 +1,29 @@
+﻿Scope: all 6 workspace projects
+../..                                    | Progress: resolved 1, reused 0, downloaded 0, added 0
+../..                                    | Progress: resolved 66, reused 48, downloaded 0, added 0
+../..                                    | Progress: resolved 129, reused 111, downloaded 0, added 0
+../..                                    | Progress: resolved 152, reused 134, downloaded 0, added 0
+../..                                    | Progress: resolved 289, reused 272, downloaded 0, added 0
+../..                                    | Progress: resolved 463, reused 454, downloaded 0, added 0
+../..                                    |   +1 +
+../..                                    | Progress: resolved 463, reused 454, downloaded 0, added 1
+../..                                    | Progress: resolved 463, reused 454, downloaded 0, added 1, done
+[WARN] Issues with peer dependencies found. Run "pnpm peers check" to list them.
+
+[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: @firebase/util@1.12.1, esbuild@0.27.3, protobufjs@7.5.7
+
+Run "pnpm approve-builds" to pick which dependencies should be allowed to run scripts.
+[ERROR] Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Users\IT y Sistemas\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+
+pnpm: Command failed with exit code 1: "C:\Program Files\nodejs\node.exe" "C:\Users\IT y Sistemas\AppData\Roaming\npm\node_modules\pnpm\bin\pnpm.mjs" install
+    at getFinalError (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:28547:14)
+    at makeError (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:30854:21)
+    at getSyncResult (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32698:10)
+    at spawnSubprocessSync (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32658:14)
+    at execaCoreSync (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:32588:23)
+    at callBoundExeca (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35116:23)
+    at boundExeca (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35093:49)
+    at sync (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:35252:10)
+    at runPnpmCli (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:210243:5)
+    at runDepsStatusCheck (file:///C:/Users/IT%20y%20Sistemas/AppData/Roaming/npm/node_modules/pnpm/dist/pnpm.mjs:211947:7)
+

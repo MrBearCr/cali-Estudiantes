@@ -12,11 +12,16 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "rollup",
-      "@rollup/rollup-win32-x64-msvc"
+      "@rollup/rollup-win32-x64-msvc",
+      "lightningcss-win32-x64-msvc"
     ]
   },
   "devDependencies": {
-    "typescript": "~5.9.2",
-    "prettier": "^3.8.1"
+    "@esbuild/win32-x64": "^0.27.3",
+    "firebase": "^11.10.0",
+    "lightningcss-win32-x64-msvc": "1.31.1",
+    "prettier": "^3.8.1",
+    "tsx": "catalog:",
+    "typescript": "~5.9.2"
   }
 }

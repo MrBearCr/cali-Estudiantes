@@ -3,7 +3,7 @@ import { Redirect, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { GraduationCap, Loader2 } from "lucide-react";
 import { useLogin, ApiError } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
@@ -60,10 +60,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col lg:flex-row bg-background">
       <div className="hidden lg:flex flex-1 relative items-center justify-center bg-sidebar text-sidebar-foreground paper-grain overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-accent/10" />
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+        <div
           className="relative z-10 max-w-md px-12"
         >
           <div className="h-12 w-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg mb-6">
@@ -82,14 +79,11 @@ export default function LoginPage() {
             <Bullet label="Exámenes finales" />
             <Bullet label="Notificaciones a estudiantes" />
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+        <div
           className="w-full max-w-md"
         >
           <div className="lg:hidden flex items-center gap-2 mb-6">
@@ -166,7 +160,7 @@ export default function LoginPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
